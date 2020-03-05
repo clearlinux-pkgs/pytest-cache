@@ -4,7 +4,7 @@
 #
 Name     : pytest-cache
 Version  : 1.0
-Release  : 1
+Release  : 2
 URL      : https://files.pythonhosted.org/packages/d1/15/082fd0428aab33d2bafa014f3beb241830427ba803a8912a5aaeaf3a5663/pytest-cache-1.0.tar.gz
 Source0  : https://files.pythonhosted.org/packages/d1/15/082fd0428aab33d2bafa014f3beb241830427ba803a8912a5aaeaf3a5663/pytest-cache-1.0.tar.gz
 Summary  : pytest plugin with mechanisms for caching across test runs
@@ -24,245 +24,10 @@ BuildRequires : tox
 BuildRequires : virtualenv
 
 %description
-pytest-cache: working with cross-testrun state
 =====================================================
-
-Usage
----------
-
-install via::
-
-    pip install pytest-cache
-
-after which other plugins can access a new `config.cache`_ object 
-which helps sharing values between ``py.test`` invocations.
-
-The plugin provides two options to rerun failures, namely ``--lf`` to
-only re-run the failures and ``--ff`` to run all tests but the failures
-from the last run first.  For cleanup (usually not needed), a
-``--clearcache`` option allows to remove all cross-session cache
-contents ahead of a test run.
-
-
-Rerunning only failures or failures first
------------------------------------------------
-
-First, let's create 50 test invocation of which only 2 fail::
-
-    # content of test_50.py
-    import pytest
-
-    @pytest.mark.parametrize("i", range(50))
-    def test_num(i):
-        if i in (17,25):
-           pytest.fail("bad luck") 
-
-If you run this for the first time you will see two failures::
-
-    $ py.test -q
-    .................F.......F........................
-    =================================== FAILURES ===================================
-    _________________________________ test_num[17] _________________________________
-    
-    i = 17
-    
-        @pytest.mark.parametrize("i", range(50))
-        def test_num(i):
-            if i in (17,25):
-    >          pytest.fail("bad luck")
-    E          Failed: bad luck
-    
-    test_50.py:6: Failed
-    _________________________________ test_num[25] _________________________________
-    
-    i = 25
-    
-        @pytest.mark.parametrize("i", range(50))
-        def test_num(i):
-            if i in (17,25):
-    >          pytest.fail("bad luck")
-    E          Failed: bad luck
-    
-    test_50.py:6: Failed
-
-If you then run it with ``--lf`` you will run only the two failing test
-from the last run::
-
-    $ py.test --lf
-    ============================= test session starts ==============================
-    platform linux2 -- Python 2.7.3 -- pytest-2.3.5
-    run-last-failure: rerun last 2 failures
-    plugins: cache
-    collected 50 items
-    
-    test_50.py FF
-    
-    =================================== FAILURES ===================================
-    _________________________________ test_num[17] _________________________________
-    
-    i = 17
-    
-        @pytest.mark.parametrize("i", range(50))
-        def test_num(i):
-            if i in (17,25):
-    >          pytest.fail("bad luck")
-    E          Failed: bad luck
-    
-    test_50.py:6: Failed
-    _________________________________ test_num[25] _________________________________
-    
-    i = 25
-    
-        @pytest.mark.parametrize("i", range(50))
-        def test_num(i):
-            if i in (17,25):
-    >          pytest.fail("bad luck")
-    E          Failed: bad luck
-    
-    test_50.py:6: Failed
-    =================== 2 failed, 48 deselected in 0.02 seconds ====================
-
-The last line indicates that 48 tests have not been run.
-
-If you run with the ``--ff`` option, all tests will be run but the first
-failures will be executed first (as can be seen from the series of ``FF`` and
-dots)::
-
-    $ py.test --ff
-    ============================= test session starts ==============================
-    platform linux2 -- Python 2.7.3 -- pytest-2.3.5
-    run-last-failure: rerun last 2 failures first
-    plugins: cache
-    collected 50 items
-    
-    test_50.py FF................................................
-    
-    =================================== FAILURES ===================================
-    _________________________________ test_num[17] _________________________________
-    
-    i = 17
-    
-        @pytest.mark.parametrize("i", range(50))
-        def test_num(i):
-            if i in (17,25):
-    >          pytest.fail("bad luck")
-    E          Failed: bad luck
-    
-    test_50.py:6: Failed
-    _________________________________ test_num[25] _________________________________
-    
-    i = 25
-    
-        @pytest.mark.parametrize("i", range(50))
-        def test_num(i):
-            if i in (17,25):
-    >          pytest.fail("bad luck")
-    E          Failed: bad luck
-    
-    test_50.py:6: Failed
-    ===================== 2 failed, 48 passed in 0.07 seconds ======================
-
-.. _`config.cache`:
-
-The new config.cache object
---------------------------------
-
-.. regendoc:wipe
-
-Plugins or conftest.py support code can get a cached value 
-using the pytest ``config`` object.  Here is a basic example
-plugin which implements a `funcarg <http://pytest.org/latest/funcargs.html>`_
-which re-uses previously created state across py.test invocations::
-
-    # content of test_caching.py
-    import time
-
-    def pytest_funcarg__mydata(request):
-        val = request.config.cache.get("example/value", None)
-        if val is None:
-            time.sleep(9*0.6) # expensive computation :)
-            val = 42
-            request.config.cache.set("example/value", val)
-        return val 
-
-    def test_function(mydata):
-        assert mydata == 23
-
-If you run this command once, it will take a while because
-of the sleep::
-
-    $ py.test -q
-    F
-    =================================== FAILURES ===================================
-    ________________________________ test_function _________________________________
-    
-    mydata = 42
-    
-        def test_function(mydata):
-    >       assert mydata == 23
-    E       assert 42 == 23
-    
-    test_caching.py:12: AssertionError
-
-If you run it a second time the value will be retrieved from
-the cache and this will be quick::
-
-    $ py.test -q
-    F
-    =================================== FAILURES ===================================
-    ________________________________ test_function _________________________________
-    
-    mydata = 42
-    
-        def test_function(mydata):
-    >       assert mydata == 23
-    E       assert 42 == 23
-    
-    test_caching.py:12: AssertionError
-
-Consult the `pytest-cache API <http://packages.python.org/pytest-cache/api.html>`_
-for more details.
-
-
-Inspecting Cache content
--------------------------------
-
-You can always peek at the content of the cache using the
-``--cache`` command line option::
-
-    $ py.test --cache
-    ============================= test session starts ==============================
-    platform linux2 -- Python 2.7.3 -- pytest-2.3.5
-    plugins: cache
-    cachedir: /tmp/doc-exec-6/.cache
-    --------------------------------- cache values ---------------------------------
-    example/value contains:
-      42
-    cache/lastfailed contains:
-      set(['test_caching.py::test_function'])
-    
-    ===============================  in 0.01 seconds ===============================
-
-Clearing Cache content
--------------------------------
-
-You can instruct pytest to clear all cache files and values 
-by adding the ``--clearcache`` option like this::
-
-    py.test --clearcache
-
-This is recommended for invocations from Continous Integration
-servers where isolation and correctness is more important
-than speed.
-
-Notes
--------------
-
-repository: http://bitbucket.org/hpk42/pytest-cache
-
-Issues: repository: http://bitbucket.org/hpk42/pytest-cache/issues
-
-more info on py.test: http://pytest.org
+        
+        Usage
+        ---------
 
 %package license
 Summary: license components for the pytest-cache package.
@@ -286,6 +51,8 @@ Summary: python3 components for the pytest-cache package.
 Group: Default
 Requires: python3-core
 Provides: pypi(pytest-cache)
+Requires: pypi(execnet)
+Requires: pypi(pytest)
 
 %description python3
 python3 components for the pytest-cache package.
@@ -300,8 +67,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1583293890
-# -Werror is for werrorists
+export SOURCE_DATE_EPOCH=1583442025
 export GCC_IGNORE_WERROR=1
 export AR=gcc-ar
 export RANLIB=gcc-ranlib
