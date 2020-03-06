@@ -4,7 +4,7 @@
 #
 Name     : pytest-cache
 Version  : 1.0
-Release  : 2
+Release  : 3
 URL      : https://files.pythonhosted.org/packages/d1/15/082fd0428aab33d2bafa014f3beb241830427ba803a8912a5aaeaf3a5663/pytest-cache-1.0.tar.gz
 Source0  : https://files.pythonhosted.org/packages/d1/15/082fd0428aab33d2bafa014f3beb241830427ba803a8912a5aaeaf3a5663/pytest-cache-1.0.tar.gz
 Summary  : pytest plugin with mechanisms for caching across test runs
@@ -50,7 +50,7 @@ python components for the pytest-cache package.
 Summary: python3 components for the pytest-cache package.
 Group: Default
 Requires: python3-core
-Provides: pypi(pytest-cache)
+Provides: pypi(pytest_cache)
 Requires: pypi(execnet)
 Requires: pypi(pytest)
 
@@ -67,7 +67,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1583442025
+export SOURCE_DATE_EPOCH=1583529336
 export GCC_IGNORE_WERROR=1
 export AR=gcc-ar
 export RANLIB=gcc-ranlib
