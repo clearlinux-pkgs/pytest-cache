@@ -4,7 +4,7 @@
 #
 Name     : pytest-cache
 Version  : 1.0
-Release  : 4
+Release  : 5
 URL      : https://files.pythonhosted.org/packages/d1/15/082fd0428aab33d2bafa014f3beb241830427ba803a8912a5aaeaf3a5663/pytest-cache-1.0.tar.gz
 Source0  : https://files.pythonhosted.org/packages/d1/15/082fd0428aab33d2bafa014f3beb241830427ba803a8912a5aaeaf3a5663/pytest-cache-1.0.tar.gz
 Summary  : pytest plugin with mechanisms for caching across test runs
